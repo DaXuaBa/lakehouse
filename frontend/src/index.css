@@ -1,0 +1,14 @@
+main {
+  min-height: 80vh;
+}
+
+.connection-container {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+}
+
+.message-container {
+  margin-bottom: 20px;
+}

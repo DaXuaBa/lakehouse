@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+sqlalchemy
+passlib
+bcrypt==4.0.1
+sqlalchemy_utils
+python-jose
+mysql-connector-python
+python-multipart
+python-dotenv
+httpx
+authlib
+requests
+coroutine
+python-dateutil
+kafka-python

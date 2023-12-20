@@ -1,0 +1,14 @@
+{
+  "name": "uterace",
+  "version": "1.0.0",
+  "description": "Lakehouse Platform",
+  "main": "main.py",
+  "scripts": {
+    "start": "concurrently \"uvicorn backend.main:app --reload\" \"npm start --prefix frontend\""
+  },
+  "author": "Dang Xuan Bach",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
