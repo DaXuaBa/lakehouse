@@ -6,9 +6,14 @@ import random
 import pandas as pd
 from configparser import ConfigParser
 
-conf_file_name = "X:\\2023-24\\Nam_4_HK1\\tieu_luan_chuyen_nganh\\making\making\\kafka_producer_consumer\\stream_app.conf"
+conf_file_name = "stream_app.conf"
 config_obj = ConfigParser()
+print(config_obj)
+print(config_obj.sections())
 config_read_obj = config_obj.read(conf_file_name)
+print(type(config_read_obj))
+print(config_read_obj)
+print(config_obj.sections())
 
 # Kafka Cluster/Server Details
 kafka_host_name = config_obj.get('kafka', 'host')

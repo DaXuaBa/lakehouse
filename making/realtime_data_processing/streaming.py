@@ -4,15 +4,10 @@ from pyspark.sql.types import *
 import time
 from configparser import ConfigParser
 
-conf_file_path = "/home/bach/workarea/code/making/realtime_data_processing/"
+conf_file_path = "/home/bach/making/realtime_data_processing/"
 conf_file_name = conf_file_path + "stream_app.conf"
 config_obj = ConfigParser()
-print(config_obj)
-print(config_obj.sections())
 config_read_obj = config_obj.read(conf_file_name)
-print(type(config_read_obj))
-print(config_read_obj)
-print(config_obj.sections())
 
 kafka_host_name = config_obj.get('kafka', 'host')
 kafka_port_no = config_obj.get('kafka', 'port_no')
@@ -41,10 +36,8 @@ db_properties['password'] = mysql_password
 db_properties['driver'] = mysql_driver
 
 def save_to_mysql_table(current_df, epoc_id, mysql_table_name):
-    print("Inside save_to_mysql_table function")
-    print("Printing epoc_id: ")
-    print(epoc_id)
-    print("Printing mysql_table_name: " + mysql_table_name)
+
+    print("Printing MySQL table name: " + mysql_table_name)
 
     mysql_jdbc_url = "jdbc:mysql://" + mysql_host_name + ":" + str(mysql_port_no) + "/" + mysql_database_name
 
@@ -55,16 +48,16 @@ def save_to_mysql_table(current_df, epoc_id, mysql_table_name):
                   mode = 'append',
                   properties = db_properties)
 
-    print("Exit out of save_to_mysql_table function")
+    print("Exit out of save to MySQL table function")
 
 if __name__ == "__main__":
-    print("Welcome to Lakehouse !!!")
+    print("Welcome to Lakehouse Platform !!!")
     print("Real-Time Data Processing Application Started ...")
     print(time.strftime("%Y-%m-%d %H:%M:%S"))
 
     spark = SparkSession \
         .builder \
-        .appName("Real-Time Data Processing with Kafka Source and Message Format as JSON") \
+        .appName("Lakehouse Platform For Sports Data Analytics") \
         .master("local[*]") \
         .getOrCreate()
 
@@ -77,8 +70,7 @@ if __name__ == "__main__":
         .option("subscribe", input_kafka_topic_name) \
         .option("startingOffsets", "latest") \
         .load()
-
-    print("Printing Schema of runner_df: ")
+    print("Printing Schema from Apache Kafka: ")
     runner_df.printSchema()
 
     runner_df1 = runner_df.selectExpr("CAST(value AS STRING)", "timestamp")
@@ -108,18 +100,10 @@ if __name__ == "__main__":
         .select(from_json(col("value"), runner_schema)\
         .alias("runner"), "timestamp")
 
-    runner_df2.printSchema()
-
     runner_df3 = runner_df2.select("runner.*", "timestamp")
-
-    print("Printing schema of runner_df3 before creating date & hour column from start_date_local ")
-    runner_df3.printSchema()
 
     runner_df3 = runner_df3.withColumn("partition_date", to_date("start_date_local"))
     runner_df3 = runner_df3.withColumn("partition_hour", hour(to_timestamp("start_date_local", 'yyyy-MM-dd HH:mm:ss')))
-
-    print("Printing schema of runner_df3 after creating date & hour column from start_date_local ")
-    runner_df3.printSchema()
 
     runner_agg_write_stream_pre = runner_df3 \
         .writeStream \
@@ -127,36 +111,39 @@ if __name__ == "__main__":
         .outputMode("update") \
         .option("truncate", "false")\
         .format("console") \
-        .start()   
+        .start()
 
     runner_raw_hdfs = runner_df3.writeStream \
         .trigger(processingTime='10 seconds') \
         .format("parquet") \
-        .option("path", "hdfs://localhost:9000/lakehouse/Bronze") \
-        .option("checkpointLocation", "runner-raw-checkpoint") \
+        .option("path", "hdfs://localhost:9000/Lakehouse/Bronze") \
+        .option("checkpointLocation", "hdfs://localhost:9000/Lakehouse/Checkpoint_Bronze") \
         .partitionBy("partition_date", "partition_hour") \
         .start()
+    
+    print("Printing Schema of Bronze Layer: ")
+    runner_df3.printSchema()
 
-    columns_to_drop = ["average_heartrate", "max_heartrate"]
+    columns_to_drop = ["run_id", "average_heartrate", "max_heartrate"]
     runner_del_sliver = runner_df3.drop(*columns_to_drop)  
-
-    print("Printing schema of runner_del_sliver ")
-    runner_del_sliver.printSchema()
 
     runner_cleaned_hdfs = runner_del_sliver.writeStream \
         .trigger(processingTime='10 seconds') \
         .format("parquet") \
-        .option("path", "hdfs://localhost:9000/lakehouse/Sliver") \
-        .option("checkpointLocation", "runner-cleaned-checkpoint") \
+        .option("path", "hdfs://localhost:9000/Lakehouse/Sliver") \
+        .option("checkpointLocation", "hdfs://localhost:9000/Lakehouse/Checkpoint_Sliver") \
         .partitionBy("partition_date", "partition_hour") \
         .start()
+    
+    print("Printing Schema of Sliver Layer: ")
+    runner_del_sliver.printSchema()
 
-    runner_df4 = runner_df3.groupBy("year_study") \
+    runner_df4 = runner_del_sliver.groupBy("year_study") \
         .agg({'distance': 'sum'}) \
         .select("year_study", col("sum(distance)") \
         .alias("total_distance"))
 
-    print("Printing Schema of runner_df4: ")
+    print("Printing Schema of total distance by Course: ")
     runner_df4.printSchema()
 
     runner_df4 \
@@ -166,12 +153,12 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_byyearstudy_table_name)) \
     .start()
 
-    runner_df5 = runner_df3.groupBy("org_name") \
+    runner_df5 = runner_del_sliver.groupBy("org_name") \
         .agg({'distance': 'sum'}) \
         .select("org_name", col("sum(distance)") \
         .alias("total_distance"))
 
-    print("Printing Schema of runner_df5: ")
+    print("Printing Schema of total distance by Majors: ")
     runner_df5.printSchema()
 
     runner_df5 \
@@ -181,12 +168,12 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_bymajors_table_name)) \
     .start()
 
-    runner_df6 = runner_df3.groupBy("student_id", "name") \
+    runner_df6 = runner_del_sliver.groupBy("student_id", "name") \
         .agg({'distance': 'sum'}) \
         .select("student_id", "name", col("sum(distance)") \
         .alias("total_distance"))
     
-    print("Printing Schema of runner_df6: ")
+    print("Printing Schema of total distance by Name: ")
     runner_df6.printSchema()
 
     runner_df6 \
@@ -196,12 +183,12 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_byname_table_name)) \
     .start()
 
-    runner_df7 = runner_df3.groupBy("gender") \
+    runner_df7 = runner_del_sliver.groupBy("gender") \
     .agg({'distance': 'sum'}) \
     .select("gender", col("sum(distance)") \
     .alias("total_distance"))
 
-    print("Printing Schema of runner_df7: ")
+    print("Printing Schema of total distance by Gender: ")
     runner_df7.printSchema()
 
     runner_df7 \
@@ -211,12 +198,12 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_bygender_table_name)) \
     .start()
 
-    runner_df8 = runner_df3.groupBy("org_name_child") \
+    runner_df8 = runner_del_sliver.groupBy("org_name_child") \
     .agg({'distance': 'sum'}) \
     .select("org_name_child", col("sum(distance)") \
     .alias("total_distance"))
 
-    print("Printing Schema of runner_df8: ")
+    print("Printing Schema of total distance by Department: ")
     runner_df8.printSchema()
 
     runner_df8 \
@@ -226,14 +213,14 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_bydepartment_table_name)) \
     .start()
 
-    runner_agg_write_stream = runner_df4 \
+    runner_agg_write_stream = runner_df7 \
         .writeStream \
         .trigger(processingTime='10 seconds') \
         .outputMode("update") \
         .option("truncate", "false")\
         .format("console") \
         .start()
-    
+
     runner_agg_write_stream.awaitTermination()
 
     print("Real-Time Data Processing Application Completed.")
