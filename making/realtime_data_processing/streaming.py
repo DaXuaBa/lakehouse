@@ -4,7 +4,7 @@ from pyspark.sql.types import *
 import time
 from configparser import ConfigParser
 
-conf_file_path = "/home/bach/making/realtime_data_processing/"
+conf_file_path = "/home/bach/Lakehouse/making/realtime_data_processing/"
 conf_file_name = conf_file_path + "stream_app.conf"
 config_obj = ConfigParser()
 config_read_obj = config_obj.read(conf_file_name)
@@ -125,20 +125,20 @@ if __name__ == "__main__":
     runner_df3.printSchema()
 
     columns_to_drop = ["run_id", "average_heartrate", "max_heartrate"]
-    runner_del_sliver = runner_df3.drop(*columns_to_drop)  
+    runner_del_silver = runner_df3.drop(*columns_to_drop)  
 
-    runner_cleaned_hdfs = runner_del_sliver.writeStream \
+    runner_cleaned_hdfs = runner_del_silver.writeStream \
         .trigger(processingTime='10 seconds') \
         .format("parquet") \
-        .option("path", "hdfs://localhost:9000/Lakehouse/Sliver") \
-        .option("checkpointLocation", "hdfs://localhost:9000/Lakehouse/Checkpoint_Sliver") \
+        .option("path", "hdfs://localhost:9000/Lakehouse/Silver") \
+        .option("checkpointLocation", "hdfs://localhost:9000/Lakehouse/Silver") \
         .partitionBy("partition_date", "partition_hour") \
         .start()
     
-    print("Printing Schema of Sliver Layer: ")
-    runner_del_sliver.printSchema()
+    print("Printing Schema of Silver Layer: ")
+    runner_del_silver.printSchema()
 
-    runner_df4 = runner_del_sliver.groupBy("year_study") \
+    runner_df4 = runner_del_silver.groupBy("year_study") \
         .agg({'distance': 'sum'}) \
         .select("year_study", col("sum(distance)") \
         .alias("total_distance"))
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_byyearstudy_table_name)) \
     .start()
 
-    runner_df5 = runner_del_sliver.groupBy("org_name") \
+    runner_df5 = runner_del_silver.groupBy("org_name") \
         .agg({'distance': 'sum'}) \
         .select("org_name", col("sum(distance)") \
         .alias("total_distance"))
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_bymajors_table_name)) \
     .start()
 
-    runner_df6 = runner_del_sliver.groupBy("student_id", "name") \
+    runner_df6 = runner_del_silver.groupBy("student_id", "name") \
         .agg({'distance': 'sum'}) \
         .select("student_id", "name", col("sum(distance)") \
         .alias("total_distance"))
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_byname_table_name)) \
     .start()
 
-    runner_df7 = runner_del_sliver.groupBy("gender") \
+    runner_df7 = runner_del_silver.groupBy("gender") \
     .agg({'distance': 'sum'}) \
     .select("gender", col("sum(distance)") \
     .alias("total_distance"))
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     .foreachBatch(lambda current_df, epoc_id: save_to_mysql_table(current_df, epoc_id, mysql_bygender_table_name)) \
     .start()
 
-    runner_df8 = runner_del_sliver.groupBy("org_name_child") \
+    runner_df8 = runner_del_silver.groupBy("org_name_child") \
     .agg({'distance': 'sum'}) \
     .select("org_name_child", col("sum(distance)") \
     .alias("total_distance"))

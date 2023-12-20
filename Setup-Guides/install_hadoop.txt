@@ -3,6 +3,8 @@ Install Apache Hadoop:
 
 sudo apt update
 
+sudo apt-get install openjdk-8-jdk
+
 nano ~/.bashrc
 
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
@@ -193,3 +195,9 @@ FYI.
 Open your web browser and go to the below URL to browse the NameNode.
 
 http://localhost:9870
+
+hdfs dfs -mkdir /Lakehouse
+hdfs dfs -mkdir /Lakehouse/Bronze
+hdfs dfs -mkdir /Lakehouse/Silver
+hdfs dfs -mkdir /Lakehouse/Checkpoint_Bronze
+hdfs dfs -mkdir /Lakehouse/Checkpoint_Silver

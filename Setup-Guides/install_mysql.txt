@@ -1,25 +1,91 @@
-Install MYSQL on Ubuntu machine
-1. Update the system
-    $ sudo apt update
-    $ sudo apt list --upgradable
-    $ sudo apt upgrade
-2. Install MYSQL on Ubuntu
-    $ sudo apt install mysql-server
-    $ sudo apt-cache mysql-server
-    $ sudo systemctl start mysql.service
-3. Set a password
-    $ sudo mysql
-    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '[password]';
-    mysql > exit
-4. Take safety precautions
-    $ sudo mysql_secure_installation
-5. Change the authentication process
-    $ mysql -u root -p
-    ALTER USER 'root'@'localhost' IDENTIFIED WITH auth_socket;
-6. Create an additional account¶
-    $ sudo mysql
-    CREATE USER 'username'@'host' IDENTIFIED WITH authentication_plugin BY 'password';
-    GRANT [privilege] ON [database].[table] TO 'username'@'host';
-    $ mysql -u username -p
-7. Check the status of MySQL
-    $ systemctl status mysql.service
+Install MySQL:
+==============
+
+sudo apt update
+
+sudo apt install mysql-server
+
+sudo systemctl status mysql
+
+mysql --version
+
+
+MySQL CLI,
+
+sudo mysql
+
+
+if MySQL client is not there, run the below command:
+
+sudo apt install mysql-client
+
+
+
+Securing MySQL(setting password for root user)
+
+
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by 'password';
+
+FLUSH PRIVILEGES;
+
+
+SELECT user,authentication_string,plugin,host FROM mysql.user;
+
+
+exit;
+
+
+sudo systemctl status mysql
+
+
+sudo mysql -u root -p
+
+show databases;
+
+
+create database railways;
+
+use railways;
+
+CREATE TABLE byname (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    batch_no INT NOT NULL,
+    mssv VARCHAR(100) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    total_distance DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE bygender (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    batch_no INT NOT NULL,
+    gender VARCHAR(100) NOT NULL,
+    total_distance DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE bymajors (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    batch_no INT NOT NULL,
+    org_name VARCHAR(100) NOT NULL,
+    total_distance DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE bydepartment (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    batch_no INT NOT NULL,
+    org_name_child VARCHAR(100) NOT NULL,
+    total_distance DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE byyear (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    batch_no INT NOT NULL,
+    year_study VARCHAR(100) NOT NULL,
+    total_distance DOUBLE NOT NULL,
+    PRIMARY KEY (id)
+);

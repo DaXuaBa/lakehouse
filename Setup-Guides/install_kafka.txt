@@ -1,11 +1,16 @@
+# Install Kafka on Ubuntu:
+=========================
 
-
+# Download Kafka
 wget https://downloads.apache.org/kafka/3.6.0/kafka_2.12-3.6.0.tgz
 
+# Extract Kafka
 tar xzf kafka_2.12-3.6.0.tgz
 
+# Move Kafka to the installation directory
 sudo mv kafka_2.12-3.6.0 /usr/local/kafka
 
+# Configure Zookeeper systemd service
 sudo nano /etc/systemd/system/zookeeper.service 
 
 [Unit]
@@ -23,6 +28,7 @@ Restart=on-abnormal
 [Install]
 WantedBy=multi-user.target
 
+# Configure Kafka systemd service
 sudo nano /etc/systemd/system/kafka.service 
 
 [Unit]
@@ -39,27 +45,30 @@ ExecStop=/usr/local/kafka/bin/kafka-server-stop.sh
 [Install]
 WantedBy=multi-user.target
 
+# Configure Kafka server properties
 cd /usr/local/kafka/config
-
 sudo nano server.properties
 
+# Add or modify the following lines
 listeners=PLAINTEXT://0.0.0.0:9092
-advertised.listeners=PLAINTEXT://34.16.163.230:9092
+advertised.listeners=PLAINTEXT://localhost:9092
 
+# Reload systemd configurations
 sudo systemctl daemon-reload 
 
+# Start Zookeeper and Kafka
 sudo systemctl start zookeeper
-
 sudo systemctl start kafka 
 
+# Check the status of Zookeeper and Kafka
 sudo systemctl status zookeeper
-
 sudo systemctl status kafka
 
+# Create Kafka topics
 cd /usr/local/kafka
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic runinput
+bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic runoutput
 
-bin/kafka-topics.sh --create --bootstrap-server 34.16.163.230:9092 --replication-factor 1 --partitions 1 --topic runinput
-bin/kafka-topics.sh --create --bootstrap-server 34.16.163.230:9092 --replication-factor 1 --partitions 1 --topic runoutput
-
-bin/kafka-console-producer.sh --topic runinput --bootstrap-server 34.168.201.192:9092
-bin/kafka-console-consumer.sh --topic runinput --bootstrap-server 34.168.201.192:9092
+# Start Kafka console producer and consumer
+bin/kafka-console-producer.sh --topic runinput --bootstrap-server localhost:9092
+bin/kafka-console-consumer.sh --topic runinput --bootstrap-server localhost:9092

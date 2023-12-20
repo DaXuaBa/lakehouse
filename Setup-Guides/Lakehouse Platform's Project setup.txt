@@ -1,0 +1,95 @@
+
+Lakehouse Platform's Project setup: 
+==================================
+
+Prerequisite:
+
+Need a virtual machine running Ubuntu 20.04, 22.04 .
+
+Follow these documents to make project environment ready.
+
+1. install_python.txt
+2. install_mysql.txt
+3. install_hadoop.txt
+4. install_spark.txt
+5. install_kafka.txt
+6. install_superset.txt
+7. setup_making.txt
+
+
+After completing the aforementioned steps, we proceed to install the backend and frontend for usage
+
+# Setup Backend and Frontend
+============================
+
+# Navigate to the backend directory
+cd Lakehouse/backend
+
+# Install backend dependencies
+pip install -r requirment.txt
+
+# Install Node.js and npm
+sudo apt install nodejs
+sudo apt install npm
+
+# Navigate to the frontend directory
+cd Lakehouse/frontend
+
+# Install frontend dependencies
+npm install 
+
+# Navigate back to the main Lakehouse directory
+cd Lakehouse
+
+# Install additional dependencies
+npm install
+
+# Start the application
+npm start
+
+
+Then we proceed to setup data processing pipeline
+
+# Setup data processing pipeline
+================================
+
+cd Lakehose/making
+
+pip install -r requirements.txt
+
+cd 
+
+. venv/bin/activate
+
+
+Run Data Processing Pipeline application(Spark Streaming):
+---------------------------------------------------------
+spark-submit --master local[*] --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0,mysql:mysql-connector-java:8.0.33 --files /home/xuanbach14052002/lakehouse/making/realtime_data_processing/stream_app.conf /home/xuanbach14052002/lakehouse/making/realtime_data_processing/streaming.py
+
+
+# Run Superset on port 5000 with additional options
+superset run -p 5000 --with-threads --reload --debugger
+
+
+Keep monitoring the real-time dashboard using below url,
+
+http://127.0.0.1:5000/
+
+Combine the code to random data:
+
+python3 ./lakehouse/making/kafka_producer_consumer/kafka_producer.py
+
+
+
+# Convert file parquet from HDFS to CSV for Reporting or ML
+===========================================================
+
+# Create an output directory
+mkdir /output
+
+# Navigate to the Lakehouse directory
+cd Lakehouse
+
+# Run the Python script for HDFS to CSV conversion
+python3 ./Lakehouse/making/hdfs_to_csv.py
+
