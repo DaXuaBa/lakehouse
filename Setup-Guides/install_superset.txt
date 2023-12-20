@@ -1,0 +1,27 @@
+python -m pip install --upgrade pip
+
+sudo apt-get install build-essential libssl-dev libffi-dev python3-dev python3-pip libsasl2-dev libldap2-dev default-libmysqlclient-dev
+
+pip install pillow
+
+nano ~/.bashrc
+
+export FLASK_APP=superset
+
+. venv/bin/activate
+
+pip install apache-superset 
+
+nano /home/xuanbach14052002/venv/lib/python3.10/site-packages/superset/config.py
+
+"SUPERSET_SECRET_KEY",'Udi3Hc4UPQ/UullKuKjy7sOMTW0TbRtjFmT4ZkDzb5AeqremfNQJZ8LY'
+
+superset db upgrade
+
+superset fab create-admin
+
+superset load_examples
+
+superset init
+
+superset run -p 5000 --with-threads --reload --debugger
